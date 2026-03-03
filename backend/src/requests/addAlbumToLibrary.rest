@@ -1,0 +1,7 @@
+POST http://localhost:3003/api/library
+Content-Type: application/json
+
+{
+  "album_id": 1,
+  "rating": 5
+}

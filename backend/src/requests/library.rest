@@ -1,0 +1,37 @@
+@baseUrl = http://localhost:3003/api
+
+### 
+
+GET {{baseUrl}}/library
+
+###
+
+POST {{baseUrl}}/library
+Content-Type: application/json
+
+{
+  "album_id": 1,
+  "rating": 4
+}
+
+###
+
+POST {{baseUrl}}/library
+Content-Type: application/json
+
+{
+  "album_id": 2
+}
+
+###
+
+PUT {{baseUrl}}/library/1
+Content-Type: application/json
+
+{
+  "rating": 5
+}
+
+###
+
+DELETE {{baseUrl}}/library/999

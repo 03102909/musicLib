@@ -1,0 +1,8 @@
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+  "email": "test@gmail.com",
+  "password_hash": "123456",
+  "role": "USER"
+}

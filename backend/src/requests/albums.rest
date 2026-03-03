@@ -1,0 +1,56 @@
+@baseUrl = http://localhost:3003/api
+
+GET {{baseUrl}}/albums
+
+###
+
+GET {{baseUrl}}/albums/1
+
+###
+
+POST {{baseUrl}}/albums
+Content-Type: application/json
+
+{
+  "title": "Linger Awhile",
+  "release_year": 2022,
+  "description": "Дебютний альбом Samara Joy на лейблі Verve Records. Ностальгічна подорож класичними джазовими стандартами з унікальною вокальною подачею. У 22 роки голос та фразування Samara нагадують легендарних виконавиць — Ella Fitzgerald та Sarah Vaughan. Отримав Grammy за Best Jazz Vocal Album та Best New Artist.",
+  "cover_url": "",
+  "artist_id": 6,
+  "genreIds": [4, 11]
+}
+
+###
+
+POST {{baseUrl}}/albums
+Content-Type: application/json
+
+{
+  "title": "Альбом без жанрів",
+  "release_year": 2020,
+  "artist_id": 1
+}
+
+###
+
+POST {{baseUrl}}/albums
+Content-Type: application/json
+
+{
+  "description": "Немає title і artist_id"
+}
+
+###
+
+PUT {{baseUrl}}/albums/1
+Content-Type: application/json
+
+{
+  "title": "Оновлений альбом",
+  "release_year": 2024,
+  "genreIds": [1]
+}
+
+###
+
+DELETE {{baseUrl}}/albums/999

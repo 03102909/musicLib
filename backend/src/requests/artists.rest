@@ -1,0 +1,27 @@
+@baseUrl = http://localhost:3003/api
+
+###
+
+GET {{baseUrl}}/artists
+
+###
+
+POST {{baseUrl}}/artists
+Content-Type: application/json
+
+{
+  "name": "Samara Joy"
+}
+
+###
+
+PUT {{baseUrl}}/artists/1
+Content-Type: application/json
+
+{
+  "name": "Lady Gaga"
+}
+
+###
+
+DELETE {{baseUrl}}/artists/999
