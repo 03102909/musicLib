@@ -1,22 +1,44 @@
 import { useState } from "react";
-import AlbumFormModal from "../components/AlbumFormModal";
-
-const Catalog = [
-  { id: 1, title: "Nevermind", artist: "Nirvana", year: 1991, genres: ["Rock", "Grunge"] },
-  { id: 2, title: "Random Access Memories", artist: "Daft Punk", year: 2013, genres: ["Electronic", "Disco"] },
-  { id: 3, title: "Abbey Road", artist: "The Beatles", year: 1969, genres: ["Rock", "Pop"] },
-  { id: 4, title: "Kind of Blue", artist: "Miles Davis", year: 1959, genres: ["Jazz"] },
-  { id: 5, title: "The Dark Side of the Moon", artist: "Pink Floyd", year: 1973, genres: ["Rock", "Progressive"] },
-  { id: 6, title: "Thriller", artist: "Michael Jackson", year: 1982, genres: ["Pop", "R&B"] },
-  { id: 7, title: "OK Computer", artist: "Radiohead", year: 1997, genres: ["Rock", "Electronic"] },
-  { id: 8, title: "To Pimp a Butterfly", artist: "Kendrick Lamar", year: 2015, genres: ["Hip-Hop", "Jazz"] },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getAlbums, getArtists, getGenres, createAlbum, updateAlbum, deleteAlbum } from "../services/api";
+import AlbumFormModal, { AlbumFormData } from "../components/AlbumFormModal";
+import type { Album } from "../types";
 
 export default function AdminCatalogPage() {
-  const [albums, setAlbums] = useState(Catalog);
+  const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [editAlbum, setEditAlbum] = useState<typeof Catalog[0] | null>(null);
+  const [editAlbum, setEditAlbum] = useState<Album | null>(null);
+
+  const { data: albums = [], isLoading: isLoadingAlbums } = useQuery({ queryKey: ["albums"], queryFn: getAlbums });
+  const { data: artists = [] } = useQuery({ queryKey: ["artists"], queryFn: getArtists });
+  const { data: genres = [] } = useQuery({ queryKey: ["genres"], queryFn: getGenres });
+
+  const createMutation = useMutation({
+    mutationFn: createAlbum,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+      setModalOpen(false);
+    },
+    onError: () => alert("Помилка створення альбому")
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => updateAlbum(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+      setModalOpen(false);
+    },
+    onError: () => alert("Помилка оновлення альбому")
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAlbum,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+    },
+    onError: () => alert("Помилка видалення альбому")
+  });
 
   const handleAdd = () => {
     setModalMode("add");
@@ -24,15 +46,35 @@ export default function AdminCatalogPage() {
     setModalOpen(true);
   };
 
-  const handleEdit = (album: typeof Catalog[0]) => {
+  const handleEdit = (album: Album) => {
     setModalMode("edit");
     setEditAlbum(album);
     setModalOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    setAlbums(albums.filter((a) => a.id !== id));
+    if (confirm("Ви впевнені, що хочете видалити цей альбом? Ця дія незворотна!")) {
+      deleteMutation.mutate(id);
+    }
   };
+
+  const handleSubmit = (data: AlbumFormData) => {
+    if (modalMode === "add") {
+      createMutation.mutate(data);
+    } else if (modalMode === "edit" && editAlbum) {
+      updateMutation.mutate({ id: editAlbum.id, data });
+    }
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
+  if (isLoadingAlbums) {
+    return (
+      <div className="flex justify-center py-20">
+        <span className="loading loading-spinner text-forest w-12 h-12"></span>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -42,7 +84,6 @@ export default function AdminCatalogPage() {
             <h1 className="font-display text-4xl md:text-5xl font-bold text-cream">
               Керування каталогом
             </h1>
-            <span className="w-2.5 h-2.5 rounded-full bg-deep-red animate-pulse" title="Адмін-режим" />
           </div>
           <p className="text-muted text-lg mt-1">Адміністрування альбомів</p>
         </div>
@@ -55,16 +96,6 @@ export default function AdminCatalogPage() {
           </svg>
           Додати альбом
         </button>
-      </div>
-
-      {/* Info banner */}
-      <div className="bg-base-300/40 border border-deep-red/30 border-l-4 border-l-deep-red rounded-lg px-4 py-3 mb-6 flex items-center gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-deep-red shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="text-lg text-muted">
-          Ви авторизовані як <span className="text-deep-red font-medium">адміністратор</span>. Зміни видимі всім користувачам.
-        </span>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-base-300/50">
@@ -84,13 +115,13 @@ export default function AdminCatalogPage() {
               <tr key={album.id} className="border-t border-base-300/30 hover:bg-base-300/20 transition-colors">
                 <td className="text-muted font-mono text-sm">{album.id}</td>
                 <td className="text-cream font-medium text-lg">{album.title}</td>
-                <td className="text-muted text-lg">{album.artist}</td>
-                <td className="text-steel text-lg">{album.year}</td>
+                <td className="text-muted text-lg">{album.artist?.name}</td>
+                <td className="text-steel text-lg">{album.release_year}</td>
                 <td>
                   <div className="flex flex-wrap gap-1">
                     {album.genres.map((g) => (
-                      <span key={g} className="text-xs px-1.5 py-0.5 rounded bg-base-300 text-muted">
-                        {g}
+                      <span key={g.id} className="text-xs px-1.5 py-0.5 rounded bg-base-300 text-muted">
+                        {g.name}
                       </span>
                     ))}
                   </div>
@@ -109,6 +140,7 @@ export default function AdminCatalogPage() {
                     <button
                       className="btn btn-ghost btn-xs text-muted hover:text-deep-red transition-colors"
                       onClick={() => handleDelete(album.id)}
+                      disabled={deleteMutation.isPending}
                       title="Видалити"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,18 +156,23 @@ export default function AdminCatalogPage() {
       </div>
 
       <AlbumFormModal
+        key={modalMode === "add" ? "add" : `edit-${editAlbum?.id}`}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         mode={modalMode}
+        artists={artists}
+        genres={genres}
+        onSubmit={handleSubmit}
+        isPending={isPending}
         album={
           editAlbum
             ? {
                 title: editAlbum.title,
-                artist: editAlbum.artist,
-                year: editAlbum.year,
-                description: "",
-                coverUrl: "",
-                genres: editAlbum.genres,
+                artist_id: editAlbum.artist?.id || 0,
+                release_year: editAlbum.release_year,
+                description: editAlbum.description || "",
+                cover_url: editAlbum.cover_url || "",
+                genreIds: editAlbum.genres.map(g => g.id),
               }
             : undefined
         }

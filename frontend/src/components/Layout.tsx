@@ -11,18 +11,15 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header — Letterboxd-style dark bar */}
       <header className="bg-header border-b border-base-300/50 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <span className="text-forest font-bold text-2xl tracking-tight font-display group-hover:text-deep-red transition-colors">
+            <Link to="/" className="flex items-center gap-2">
+              <span className="text-forest font-bold text-2xl tracking-tight font-display">
                 Music Library<span className="text-deep-red">.</span>
               </span>
             </Link>
 
-            {/* Nav */}
             <nav className="hidden sm:flex items-center gap-1">
               {navLinks.map((link) => {
                 const isActive =
@@ -45,7 +42,6 @@ export default function Layout() {
               })}
             </nav>
 
-            {/* User */}
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
@@ -56,7 +52,6 @@ export default function Layout() {
             </div>
           </div>
 
-          {/* Mobile nav */}
           <nav className="sm:hidden flex items-center gap-1 pb-3 overflow-x-auto">
             {navLinks.map((link) => {
               const isActive =
@@ -81,12 +76,10 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8 md:py-10">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-base-300/50 bg-header">
         <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-center gap-2">
           <p className="text-base text-muted">

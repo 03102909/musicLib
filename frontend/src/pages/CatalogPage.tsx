@@ -1,86 +1,55 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import AlbumCard from "../components/AlbumCard";
+import { getAlbums } from "../services/api";
 
-const mockAlbums = [
-  {
-    id: 1,
-    title: "Nevermind",
-    artist: "Nirvana",
-    year: 1991,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/b/b7/NirvanaNevermindalbumcover.jpg",
-    genres: ["Rock", "Grunge"],
-  },
-  {
-    id: 5,
-    title: "The Dark Side of the Moon",
-    artist: "Pink Floyd",
-    year: 1973,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/3/3b/Dark_Side_of_the_Moon.png",
-    genres: ["Rock", "Progressive"],
-  },
-  {
-    id: 6,
-    title: "Thriller",
-    artist: "Michael Jackson",
-    year: 1982,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/5/55/Michael_Jackson_-_Thriller.png",
-    genres: ["Pop", "R&B"],
-  },
-  {
-    id: 7,
-    title: "OK Computer",
-    artist: "Radiohead",
-    year: 1997,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/b/ba/Radioheadokcomputer.png",
-    genres: ["Rock", "Electronic"],
-  },
-  {
-    id: 8,
-    title: "To Pimp a Butterfly",
-    artist: "Kendrick Lamar",
-    year: 2015,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/f/f6/Kendrick_Lamar_-_To_Pimp_a_Butterfly.png",
-    genres: ["Hip-Hop", "Jazz"],
-  },
-    {
-    id: 2,
-    title: "Random Access Memories",
-    artist: "Daft Punk",
-    year: 2013,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/a/a7/Random_Access_Memories.jpg",
-    genres: ["Electronic", "Disco"],
-  },
-  {
-    id: 3,
-    title: "Abbey Road",
-    artist: "The Beatles",
-    year: 1969,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg",
-    genres: ["Rock", "Pop"],
-  },
-  {
-    id: 4,
-    title: "Kind of Blue",
-    artist: "Miles Davis",
-    year: 1959,
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/9/9c/MilesDavisKindofBlue.jpg",
-    genres: ["Jazz"],
-  },
-];
-
-const allGenres = ["Усі", "Rock", "Pop", "Jazz", "Electronic", "Hip-Hop", "R&B", "Grunge", "Progressive", "Disco"];
+const ALL_GENRES_LABEL = "Усі";
 
 export default function CatalogPage() {
   const [search, setSearch] = useState("");
-  const [genre, setGenre] = useState("Усі");
+  const [genre, setGenre] = useState(ALL_GENRES_LABEL);
 
-  const filtered = mockAlbums.filter((a) => {
+  const { data: albums = [], isLoading, isError } = useQuery({
+    queryKey: ["albums"],
+    queryFn: getAlbums,
+  });
+
+  // Extract unique genres from albums dynamically
+  const allGenres = useMemo(() => {
+    const genresSet = new Set<string>();
+    albums.forEach((album) => {
+      album.genres.forEach((g) => genresSet.add(g.name));
+    });
+    return [ALL_GENRES_LABEL, ...Array.from(genresSet).sort()];
+  }, [albums]);
+
+  const filtered = albums.filter((a) => {
     const matchSearch =
       a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.artist.toLowerCase().includes(search.toLowerCase());
-    const matchGenre = genre === "Усі" || a.genres.includes(genre);
+      a.artist.name.toLowerCase().includes(search.toLowerCase());
+    
+    const matchGenre =
+      genre === ALL_GENRES_LABEL ||
+      a.genres.some((g) => g.name === genre);
+      
     return matchSearch && matchGenre;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <span className="loading loading-spinner text-forest w-12 h-12"></span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-20 text-deep-red">
+        <p className="text-xl">Помилка завантаження каталогу. Спробуйте пізніше.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -89,11 +58,10 @@ export default function CatalogPage() {
           Каталог альбомів
         </h1>
         <p className="text-muted text-lg">
-          Досліджуйте колекцію з <span className="text-deep-red font-semibold">{mockAlbums.length}</span> альбомів від культових виконавців
+          Досліджуйте колекцію з <span className="text-deep-red font-semibold">{albums.length}</span> альбомів від культових виконавців
         </p>
       </section>
 
-      {/* Search + Filter */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
           <input
@@ -106,7 +74,6 @@ export default function CatalogPage() {
         </div>
       </div>
 
-      {/* Genre pills */}
       <div className="flex flex-wrap gap-2 mb-6">
         {allGenres.map((g) => (
           <button
@@ -123,16 +90,22 @@ export default function CatalogPage() {
         ))}
       </div>
 
-      {/* Count */}
       <p className="text-base text-muted mb-4">
         Знайдено: <span className="text-deep-red font-semibold">{filtered.length}</span> альбомів
       </p>
 
-      {/* Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map((album) => (
-            <AlbumCard key={album.id} {...album} />
+            <AlbumCard
+              key={album.id}
+              id={album.id}
+              title={album.title}
+              artist={album.artist.name}
+              year={album.release_year}
+              coverUrl={album.cover_url}
+              genres={album.genres.map(g => g.name)}
+            />
           ))}
         </div>
       ) : (

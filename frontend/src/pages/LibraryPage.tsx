@@ -1,70 +1,57 @@
-import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import RatingStars from "../components/RatingStars";
-
-const mockLibrary = [
-  {
-    id: 1,
-    albumId: 1,
-    title: "Nevermind",
-    artist: "Nirvana",
-    year: 1991,
-    rating: 5,
-    addedAt: "2025-12-15",
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/b/b7/NirvanaNevermindalbumcover.jpg",
-    genres: ["Rock", "Grunge"],
-  },
-  {
-    id: 2,
-    albumId: 3,
-    title: "Abbey Road",
-    artist: "The Beatles",
-    year: 1969,
-    rating: 4,
-    addedAt: "2025-11-20",
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/4/42/Beatles_-_Abbey_Road.jpg",
-    genres: ["Rock", "Pop"],
-  },
-  {
-    id: 3,
-    albumId: 4,
-    title: "Kind of Blue",
-    artist: "Miles Davis",
-    year: 1959,
-    rating: 5,
-    addedAt: "2026-01-05",
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/9/9c/MilesDavisKindofBlue.jpg",
-    genres: ["Jazz"],
-  },
-  {
-    id: 4,
-    albumId: 6,
-    title: "Thriller",
-    artist: "Michael Jackson",
-    year: 1982,
-    rating: 3,
-    addedAt: "2026-02-10",
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/5/55/Michael_Jackson_-_Thriller.png",
-    genres: ["Pop", "R&B"],
-  },
-  {
-    id: 5,
-    albumId: 7,
-    title: "OK Computer",
-    artist: "Radiohead",
-    year: 1997,
-    rating: 4,
-    addedAt: "2026-03-01",
-    coverUrl: "https://upload.wikimedia.org/wikipedia/en/b/ba/Radioheadokcomputer.png",
-    genres: ["Rock", "Electronic"],
-  },
-];
+import { getUserLibrary, removeLibraryItem, updateLibraryItem } from "../services/api";
+import type { LibraryItem } from "../types";
 
 export default function LibraryPage() {
-  const [items, setItems] = useState(mockLibrary);
+  const queryClient = useQueryClient();
+
+  const { data: items = [], isLoading, isError } = useQuery({
+    queryKey: ["library", 1], 
+    queryFn: () => getUserLibrary(1),
+  });
+
+  const { mutate: handleDeleteItem } = useMutation({
+    mutationFn: (id: number) => removeLibraryItem(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["library", 1] });
+    },
+    onError: () => {
+      alert("Не вдалося видалити альбом з бібліотеки");
+    }
+  });
+
+  const { mutate: handleUpdateRating } = useMutation({
+    mutationFn: ({ id, rating }: { id: number; rating: number }) => updateLibraryItem(id, rating),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["library", 1] });
+    },
+    onError: () => {
+      alert("Не вдалося оновити рейтинг альбому");
+    }
+  });
 
   const handleDelete = (id: number) => {
-    setItems(items.filter((i) => i.id !== id));
+    if (confirm("Ви дійсно хочете видалити цей альбом з бібліотеки?")) {
+      handleDeleteItem(id);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <span className="loading loading-spinner text-forest w-12 h-12"></span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-20 text-deep-red">
+        <p className="text-xl">Помилка завантаження бібліотеки. Спробуйте пізніше.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -77,33 +64,24 @@ export default function LibraryPage() {
             <span className="text-deep-red font-semibold">{items.length}</span> альбомів у вашій колекції
           </p>
         </div>
-        <div className="flex gap-2">
-          <button className="btn btn-sm bg-base-300 text-cream border-base-400/50 hover:bg-base-400 gap-2">
-            Імпорт
-          </button>
-          <button className="btn btn-sm bg-base-300 text-cream border-base-400/50 hover:bg-base-400 gap-2">
-            Експорт
-          </button>
-        </div>
       </div>
 
       {items.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {items.map((item) => (
+          {items.map((item: LibraryItem) => (
             <div
               key={item.id}
-              className="rounded-lg overflow-hidden bg-base-200 border border-base-300/50 hover:border-forest/40 transition-colors duration-200 group"
+              className="rounded-lg overflow-hidden bg-base-200 border border-base-300/50 hover:border-forest/40 transition-colors duration-200 group flex flex-col"
             >
               <figure className="relative aspect-square overflow-hidden bg-gradient-to-br from-deep-red/30 to-forest/30 group">
-                {item.coverUrl ? (
+                {item.album.cover_url ? (
                   <img
-                    src={item.coverUrl}
-                    alt={`${item.title} — ${item.artist}`}
+                    src={item.album.cover_url}
+                    alt={`${item.album.title} — ${item.album.artist.name}`}
                     className="absolute inset-0 w-full h-full object-cover z-10"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ) : null}
-                {/* Delete button overlay */}
                 <button
                   className="absolute top-2 right-2 z-20 btn btn-circle btn-xs bg-base-100/70 border-none text-muted hover:bg-deep-red hover:text-cream transition-all opacity-0 group-hover:opacity-100"
                   onClick={() => handleDelete(item.id)}
@@ -114,30 +92,33 @@ export default function LibraryPage() {
                   </svg>
                 </button>
               </figure>
-              <div className="p-4">
-                <h3 className="font-display font-semibold text-lg text-cream leading-tight line-clamp-1 group-hover:text-forest transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-base text-muted mt-1">{item.artist}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-base text-steel">{item.year}</span>
-                  {item.genres.slice(0, 2).map((g) => (
-                    <span
-                      key={g}
-                      className="text-sm text-muted/60 before:content-['·'] before:mr-1"
-                    >
-                      {g}
-                    </span>
-                  ))}
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-display font-semibold text-lg text-cream leading-tight line-clamp-1 group-hover:text-forest transition-colors">
+                    {item.album.title}
+                  </h3>
+                  <p className="text-base text-muted mt-1">{item.album.artist.name}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-base text-steel">{item.album.release_year}</span>
+                    {item.album.genres.slice(0, 2).map((g) => (
+                      <span
+                        key={g.id}
+                        className="text-sm text-muted/60 before:content-['·'] before:mr-1"
+                      >
+                        {g.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-2 flex items-center justify-between">
+                <div className="mt-4 flex items-center justify-between mt-auto">
                   <RatingStars
-                    value={item.rating}
+                    value={item.rating || 0}
                     name={`rating-${item.id}`}
                     size="xs"
+                    onChange={(val) => handleUpdateRating({ id: item.id, rating: val })}
                   />
                   <span className="text-xs text-muted">
-                    {new Date(item.addedAt).toLocaleDateString("uk-UA")}
+                    {new Date(item.added_at).toLocaleDateString("uk-UA")}
                   </span>
                 </div>
               </div>

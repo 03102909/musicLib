@@ -26,7 +26,7 @@ export type LibraryItem = {
   album_id: number;
   rating: number | null;
   added_at: string | null;
-  albums: Album;
+  album: Album;
 };
 
 export type User = {

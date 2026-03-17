@@ -122,7 +122,14 @@ const updateAlbum = async (req, res, next) => {
 const deleteAlbum = async (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    await prisma.albums.delete({ where: { id } });
+    
+    // Perform a transaction to delete dependencies first
+    await prisma.$transaction([
+      prisma.albums_genres.deleteMany({ where: { album_id: id } }),
+      prisma.library_item.deleteMany({ where: { album_id: id } }),
+      prisma.albums.delete({ where: { id } })
+    ]);
+    
     res.status(204).end();
   } catch (error) {
     next(error);
