@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Album, LibraryItem, Artist, Genre } from '../types';
+import { Album, LibraryItem, Artist, Genre, ChartDataYear, ChartDataGenre } from '../types';
 
 const api = axios.create({
   baseURL: 'http://localhost:3003/api', 
@@ -18,22 +18,6 @@ export const getAlbumById = async (id: number): Promise<Album> => {
   return data;
 };
 
-// Admin Endpoints
-export const createAlbum = async (albumData: any): Promise<Album> => {
-  const { data } = await api.post('/albums', albumData);
-  return data;
-};
-
-export const updateAlbum = async (id: number, albumData: any): Promise<Album> => {
-  const { data } = await api.put(`/albums/${id}`, albumData);
-  return data;
-};
-
-export const deleteAlbum = async (id: number): Promise<void> => {
-  await api.delete(`/albums/${id}`);
-};
-
-// Reference Data Endpoints
 export const getArtists = async (): Promise<Artist[]> => {
   const { data } = await api.get('/artists');
   return data;
@@ -64,6 +48,32 @@ export const updateLibraryItem = async (libraryItemId: number, rating: number | 
 
 export const removeLibraryItem = async (libraryItemId: number): Promise<void> => {
   await api.delete(`/library/${libraryItemId}`);
+};
+
+// diagrams
+export const getAlbumsCountByYear = async (): Promise<ChartDataYear[]> => {
+  const { data } = await api.get('/charts/countByYear');
+  return data;
+};
+
+export const getAlbumsCountByGenre = async (): Promise<ChartDataGenre[]> => {
+  const { data } = await api.get('/charts/countByGenre');
+  return data;
+};
+
+// admin
+export const createAlbum = async (albumData: any): Promise<Album> => {
+  const { data } = await api.post('/albums', albumData);
+  return data;
+};
+
+export const updateAlbum = async (id: number, albumData: any): Promise<Album> => {
+  const { data } = await api.put(`/albums/${id}`, albumData);
+  return data;
+};
+
+export const deleteAlbum = async (id: number): Promise<void> => {
+  await api.delete(`/albums/${id}`);
 };
 
 export default api;

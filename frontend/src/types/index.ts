@@ -35,3 +35,13 @@ export type User = {
   role: string | null;
   created_at: string | null;
 };
+
+export type ChartDataYear = {
+  year: string;
+  count: number;
+};
+
+export type ChartDataGenre = {
+  genre: string;
+  count: number;
+};

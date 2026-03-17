@@ -80,7 +80,6 @@ body {
   color: var(--color-cream);
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
 }
