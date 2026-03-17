@@ -14,7 +14,6 @@ export default function CatalogPage() {
     queryFn: getAlbums,
   });
 
-  // Extract unique genres from albums dynamically
   const allGenres = useMemo(() => {
     const genresSet = new Set<string>();
     albums.forEach((album) => {

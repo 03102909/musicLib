@@ -2,7 +2,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="w-full max-w-sm">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="font-display text-4xl font-bold text-cream mb-2">
             Music Library<span className="text-deep-red">.</span>

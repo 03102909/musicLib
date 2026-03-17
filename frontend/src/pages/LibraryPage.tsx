@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import RatingStars from "../components/RatingStars";
 import { getUserLibrary, removeLibraryItem, updateLibraryItem } from "../services/api";
 import type { LibraryItem } from "../types";
+import { useToast } from "../contexts/ToastContext";
 
 export default function LibraryPage() {
   const queryClient = useQueryClient();
+  const { addToast } = useToast();
 
   const { data: items = [], isLoading, isError } = useQuery({
     queryKey: ["library", 1], 
@@ -17,7 +19,7 @@ export default function LibraryPage() {
       queryClient.invalidateQueries({ queryKey: ["library", 1] });
     },
     onError: () => {
-      alert("Не вдалося видалити альбом з бібліотеки");
+      addToast("Не вдалося видалити альбом з бібліотеки", "error");
     }
   });
 
@@ -27,7 +29,7 @@ export default function LibraryPage() {
       queryClient.invalidateQueries({ queryKey: ["library", 1] });
     },
     onError: () => {
-      alert("Не вдалося оновити рейтинг альбому");
+      addToast("Не вдалося оновити рейтинг альбому", "error");
     }
   });
 

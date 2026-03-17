@@ -1,4 +1,5 @@
 import { Artist, Genre } from "../types";
+import { useToast } from "../contexts/ToastContext";
 
 export type AlbumFormData = {
   title: string;
@@ -30,6 +31,8 @@ export default function AlbumFormModal({
   onSubmit,
   isPending
 }: AlbumFormModalProps) {
+  const { addToast } = useToast();
+  
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -40,7 +43,7 @@ export default function AlbumFormModal({
     const description = formData.get("description") as string;
     const genreIds = formData.getAll("genreIds").map(Number);
     if (!title || !artist_id) {
-       alert("Заповніть обов'язкові поля: назва та виконавець");
+       addToast("Заповніть обов'язкові поля: назва та виконавець", "error");
        return;
     }
     onSubmit({ title, artist_id, release_year, cover_url, description, genreIds });

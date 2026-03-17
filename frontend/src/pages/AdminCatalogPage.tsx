@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAlbums, getArtists, getGenres, createAlbum, updateAlbum, deleteAlbum } from "../services/api";
 import AlbumFormModal, { AlbumFormData } from "../components/AlbumFormModal";
 import type { Album } from "../types";
+import { useToast } from "../contexts/ToastContext";
 
 export default function AdminCatalogPage() {
   const queryClient = useQueryClient();
+  const { addToast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editAlbum, setEditAlbum] = useState<Album | null>(null);
@@ -20,7 +22,7 @@ export default function AdminCatalogPage() {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       setModalOpen(false);
     },
-    onError: () => alert("Помилка створення альбому")
+    onError: () => addToast("Помилка створення альбому", "error")
   });
 
   const updateMutation = useMutation({
@@ -29,7 +31,7 @@ export default function AdminCatalogPage() {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
       setModalOpen(false);
     },
-    onError: () => alert("Помилка оновлення альбому")
+    onError: () => addToast("Помилка оновлення альбому", "error")
   });
 
   const deleteMutation = useMutation({
@@ -37,7 +39,7 @@ export default function AdminCatalogPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["albums"] });
     },
-    onError: () => alert("Помилка видалення альбому")
+    onError: () => addToast("Помилка видалення альбому", "error")
   });
 
   const handleAdd = () => {

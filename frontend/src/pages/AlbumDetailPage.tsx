@@ -2,10 +2,12 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import RatingStars from "../components/RatingStars";
 import { getAlbumById, addToLibrary } from "../services/api";
+import { useToast } from "../contexts/ToastContext";
 
 export default function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>();
   const albumId = Number(id);
+  const { addToast } = useToast();
 
   const { data: album, isLoading, isError } = useQuery({
     queryKey: ["album", albumId],
@@ -17,10 +19,10 @@ export default function AlbumDetailPage() {
   const { mutate: handleAddToLibrary, isPending: isAdding } = useMutation({
     mutationFn: () => addToLibrary(albumId),
     onSuccess: () => {
-      alert("Альбом додано в бібліотеку!");
+       // Optional: could addToast("Added to library", "success") but user said no success messages.
     },
     onError: () => {
-      alert("Не вдалося додати альбом у бібліотеку.");
+      addToast("Не вдалося додати альбом у бібліотеку.", "error");
     },
   });
 
