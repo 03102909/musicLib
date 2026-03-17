@@ -1,0 +1,35 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@plugin",
+      "description": "Tailwind CSS v4: Load a plugin from CSS.",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Docs",
+          "url": "https://tailwindcss.com/docs"
+        }
+      ]
+    },
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4: Define theme values.",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Docs",
+          "url": "https://tailwindcss.com/docs"
+        }
+      ]
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4: Configure content sources.",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Docs",
+          "url": "https://tailwindcss.com/docs"
+        }
+      ]
+    }
+  ]
+}

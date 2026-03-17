@@ -20,7 +20,7 @@ POST {{baseUrl}}/library
 Content-Type: application/json
 
 {
-  "album_id": 2
+  "album_id": 3
 }
 
 ###
