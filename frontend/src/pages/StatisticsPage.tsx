@@ -24,16 +24,15 @@ export default function StatisticsPage() {
     ...yearData.map((y: ChartDataYear) => [y.year, y.count]),
   ];
 
-  const totalAlbums = genreData.reduce((sum, g) => sum + g.count, 0);
-  const totalGenres = genreData.length;
-
   return (
     <div>
       <section className="mb-10">
         <h1 className="font-display text-4xl md:text-5xl font-bold text-cream mb-3">
           Статистика
         </h1>
-        <p className="text-muted text-lg">Аналітика каталогу музичних альбомів</p>
+        <p className="text-muted text-lg">
+          Аналітика каталогу музичних альбомів
+        </p>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -46,7 +45,9 @@ export default function StatisticsPage() {
               <span className="loading loading-spinner text-forest w-10 h-10"></span>
             </div>
           ) : genreData.length === 0 ? (
-            <div className="text-center text-muted mt-10">Немає даних для відображення</div>
+            <div className="text-center text-muted mt-10">
+              Немає даних для відображення
+            </div>
           ) : (
             <Chart
               chartType="PieChart"
@@ -55,11 +56,18 @@ export default function StatisticsPage() {
               data={genreChartData}
               options={{
                 backgroundColor: "transparent",
-                legend: { textStyle: { color: "#9ca3af" } }, 
+                legend: { textStyle: { color: "#9ca3af" } },
                 pieSliceText: "value",
-                pieSliceBorderColor: "#111827", 
+                pieSliceBorderColor: "#111827",
                 chartArea: { width: "90%", height: "80%" },
-                colors: ["#2d6a4f", "#9b2226", "#ca6702", "#115e59", "#bbd0ff", "#005f73"],
+                colors: [
+                  "#2d6a4f",
+                  "#9b2226",
+                  "#ca6702",
+                  "#115e59",
+                  "#bbd0ff",
+                  "#005f73",
+                ],
               }}
             />
           )}
@@ -74,7 +82,9 @@ export default function StatisticsPage() {
               <span className="loading loading-spinner text-forest w-10 h-10"></span>
             </div>
           ) : yearData.length === 0 ? (
-            <div className="text-center text-muted mt-10">Немає даних для відображення</div>
+            <div className="text-center text-muted mt-10">
+              Немає даних для відображення
+            </div>
           ) : (
             <Chart
               chartType="ColumnChart"
@@ -84,23 +94,23 @@ export default function StatisticsPage() {
               options={{
                 backgroundColor: "transparent",
                 legend: { position: "none" },
-                hAxis: { 
+                hAxis: {
                   textStyle: { color: "#9ca3af" },
                   gridlines: { color: "transparent" },
                   title: "Рік випуску",
                   titleTextStyle: { color: "#9ca3af", italic: false },
                 },
-                vAxis: { 
+                vAxis: {
                   textStyle: { color: "#9ca3af" },
                   gridlines: { color: "#374151" },
                   title: "Кількість альбомів",
                   titleTextStyle: { color: "#9ca3af", italic: false },
                   minValue: 0,
-                  format: "#" 
+                  format: "#",
                 },
                 chartArea: { width: "80%", height: "70%" },
                 colors: ["#2d6a4f"],
-                bar: { groupWidth: "60%" }
+                bar: { groupWidth: "60%" },
               }}
             />
           )}

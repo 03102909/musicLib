@@ -8,6 +8,7 @@ const genreRoutes = require("./routes/genreRoutes");
 const libraryRoutes = require("./routes/libraryRoutes");
 const userRoutes = require("./routes/userRoutes");
 const chartRoutes = require("./routes/chartRoutes");
+const dataPortRoutes = require("./routes/dataPortRoutes");
 
 const app = express();
 app.use(cors());
@@ -20,6 +21,7 @@ app.use("/api/genres", genreRoutes);
 app.use("/api/library", libraryRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/charts", chartRoutes);
+app.use("/api/data-port", dataPortRoutes);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

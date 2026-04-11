@@ -76,4 +76,27 @@ export const deleteAlbum = async (id: number): Promise<void> => {
   await api.delete(`/albums/${id}`);
 };
 
+// data port (import/export)
+export const importFromExcel = async (file: File): Promise<{ message: string; imported: number; skipped: number }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const { data } = await api.post('/data-port/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+};
+
+export const exportToExcel = async (): Promise<void> => {
+  const response = await api.get('/data-port/export', { responseType: 'blob' });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  const today = new Date().toISOString().slice(0, 10);
+  link.setAttribute('download', `music_library_${today}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 export default api;

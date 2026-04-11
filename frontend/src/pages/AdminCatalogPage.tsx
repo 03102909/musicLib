@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAlbums, getArtists, getGenres, createAlbum, updateAlbum, deleteAlbum } from "../services/api";
+import { getAlbums, getArtists, getGenres, createAlbum, updateAlbum, deleteAlbum, importFromExcel, exportToExcel } from "../services/api";
 import AlbumFormModal, { AlbumFormData } from "../components/AlbumFormModal";
 import type { Album } from "../types";
 import { useToast } from "../contexts/ToastContext";
@@ -11,6 +11,7 @@ export default function AdminCatalogPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [editAlbum, setEditAlbum] = useState<Album | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: albums = [], isLoading: isLoadingAlbums } = useQuery({ queryKey: ["albums"], queryFn: getAlbums });
   const { data: artists = [] } = useQuery({ queryKey: ["artists"], queryFn: getArtists });
@@ -42,6 +43,19 @@ export default function AdminCatalogPage() {
     onError: () => addToast("Помилка видалення альбому", "error")
   });
 
+  const importMutation = useMutation({
+    mutationFn: importFromExcel,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["albums"] });
+      queryClient.invalidateQueries({ queryKey: ["artists"] });
+      queryClient.invalidateQueries({ queryKey: ["genres"] });
+      addToast(`Імпортовано: ${result.imported}, пропущено: ${result.skipped}`, "success");
+    },
+    onError: () => addToast("Помилка імпорту файлу", "error"),
+  });
+
+  const [isExporting, setIsExporting] = useState(false);
+
   const handleAdd = () => {
     setModalMode("add");
     setEditAlbum(null);
@@ -68,6 +82,30 @@ export default function AdminCatalogPage() {
     }
   };
 
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      importMutation.mutate(file);
+      e.target.value = "";
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportToExcel();
+      addToast("Файл успішно завантажено", "success");
+    } catch {
+      addToast("Помилка експорту", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   if (isLoadingAlbums) {
@@ -89,15 +127,59 @@ export default function AdminCatalogPage() {
           </div>
           <p className="text-muted text-lg mt-1">Адміністрування альбомів</p>
         </div>
-        <button
-          className="btn btn-sm bg-forest text-base-100 hover:bg-forest/80 border-none gap-2"
-          onClick={handleAdd}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Додати альбом
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {/* Import button */}
+          <button
+            className="btn btn-sm bg-base-300 text-cream hover:bg-base-400 border-none gap-2"
+            onClick={handleImportClick}
+            disabled={importMutation.isPending}
+          >
+            {importMutation.isPending ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            )}
+            Імпорт .xlsx
+          </button>
+
+          {/* Export button */}
+          <button
+            className="btn btn-sm bg-base-300 text-cream hover:bg-base-400 border-none gap-2"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            )}
+            Експорт .xlsx
+          </button>
+
+          {/* Add album button */}
+          <button
+            className="btn btn-sm bg-forest text-base-100 hover:bg-forest/80 border-none gap-2"
+            onClick={handleAdd}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Додати альбом
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-base-300/50">
