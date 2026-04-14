@@ -1,11 +1,7 @@
 const prisma = require("../config/prisma");
 const ExcelJS = require("exceljs");
 
-// ─── Column layout ───
-// | Title | Artist | Release Year | Description | Cover URL |
 const HEADERS = ["Title", "Artist", "Release Year", "Description", "Cover URL"];
-
-// ────────────────────────── IMPORT ──────────────────────────
 
 const importFromExcel = async (req, res, next) => {
   try {
@@ -23,13 +19,11 @@ const importFromExcel = async (req, res, next) => {
       const genreName = worksheet.name.trim();
       if (!genreName) continue;
 
-      // Find or create genre
       let genre = await prisma.genres.findUnique({ where: { name: genreName } });
       if (!genre) {
         genre = await prisma.genres.create({ data: { name: genreName } });
       }
 
-      // Iterate rows (skip header row 1)
       worksheet.eachRow({ includeEmpty: false }, () => {}); // force parse
       const rowCount = worksheet.rowCount;
 
@@ -46,13 +40,11 @@ const importFromExcel = async (req, res, next) => {
           continue;
         }
 
-        // Find or create artist
         let artist = await prisma.artists.findFirst({ where: { name: artistName } });
         if (!artist) {
           artist = await prisma.artists.create({ data: { name: artistName } });
         }
 
-        // Check for duplicate album (same title + same artist)
         const existingAlbum = await prisma.albums.findFirst({
           where: { title, artist_id: artist.id },
         });
@@ -62,7 +54,6 @@ const importFromExcel = async (req, res, next) => {
           continue;
         }
 
-        // Create album & link to genre
         await prisma.albums.create({
           data: {
             title,
@@ -81,7 +72,7 @@ const importFromExcel = async (req, res, next) => {
     }
 
     res.json({
-      message: "Імпорт завершено",
+      message: "Import completed",
       imported: importedCount,
       skipped: skippedCount,
     });
@@ -90,11 +81,8 @@ const importFromExcel = async (req, res, next) => {
   }
 };
 
-// ────────────────────────── EXPORT ──────────────────────────
-
 const exportToExcel = async (req, res, next) => {
   try {
-    // Get all genres with their albums
     const genres = await prisma.genres.findMany({
       include: {
         albums_genres: {
@@ -114,10 +102,9 @@ const exportToExcel = async (req, res, next) => {
     workbook.created = new Date();
 
     for (const genre of genres) {
-      const sheetName = genre.name.substring(0, 31); // Excel sheet name max 31 chars
+      const sheetName = genre.name.substring(0, 31); 
       const worksheet = workbook.addWorksheet(sheetName);
 
-      // Header row
       const headerRow = worksheet.addRow(HEADERS);
       headerRow.font = { bold: true };
       headerRow.eachCell((cell) => {
@@ -129,7 +116,6 @@ const exportToExcel = async (req, res, next) => {
         cell.font = { bold: true, color: { argb: "FFFEFFD3" } };
       });
 
-      // Column widths
       worksheet.columns = [
         { width: 30 },
         { width: 25 },
@@ -138,7 +124,6 @@ const exportToExcel = async (req, res, next) => {
         { width: 35 },
       ];
 
-      // Data rows
       for (const ag of genre.albums_genres) {
         const album = ag.albums;
         worksheet.addRow([
@@ -151,7 +136,6 @@ const exportToExcel = async (req, res, next) => {
       }
     }
 
-    // If no genres exist, create an empty template sheet
     if (genres.length === 0) {
       const ws = workbook.addWorksheet("Genre Name");
       const headerRow = ws.addRow(HEADERS);
