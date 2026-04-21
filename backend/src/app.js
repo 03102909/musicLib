@@ -9,12 +9,14 @@ const libraryRoutes = require("./routes/libraryRoutes");
 const userRoutes = require("./routes/userRoutes");
 const chartRoutes = require("./routes/chartRoutes");
 const dataPortRoutes = require("./routes/dataPortRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(middleware.requestLogger);
 
+app.use("/api/auth", authRoutes);
 app.use("/api/albums", albumRoutes);
 app.use("/api/artists", artistRoutes);
 app.use("/api/genres", genreRoutes);

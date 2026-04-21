@@ -9,14 +9,14 @@ export default function LibraryPage() {
   const { addToast } = useToast();
 
   const { data: items = [], isLoading, isError } = useQuery({
-    queryKey: ["library", 1], 
-    queryFn: () => getUserLibrary(1),
+    queryKey: ["library"],
+    queryFn: () => getUserLibrary(),
   });
 
   const { mutate: handleDeleteItem } = useMutation({
     mutationFn: (id: number) => removeLibraryItem(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["library", 1] });
+      queryClient.invalidateQueries({ queryKey: ["library"] });
     },
     onError: () => {
       addToast("Не вдалося видалити альбом з бібліотеки", "error");
@@ -26,7 +26,7 @@ export default function LibraryPage() {
   const { mutate: handleUpdateRating } = useMutation({
     mutationFn: ({ id, rating }: { id: number; rating: number }) => updateLibraryItem(id, rating),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["library", 1] });
+      queryClient.invalidateQueries({ queryKey: ["library"] });
     },
     onError: () => {
       addToast("Не вдалося оновити рейтинг альбому", "error");

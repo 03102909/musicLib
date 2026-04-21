@@ -2,11 +2,13 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getAlbumById, addToLibrary } from "../services/api";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AlbumDetailPage() {
   const { id } = useParams<{ id: string }>();
   const albumId = Number(id);
   const { addToast } = useToast();
+  const { isUser, isAuthenticated } = useAuth();
 
   const {
     data: album,
@@ -21,6 +23,9 @@ export default function AlbumDetailPage() {
 
   const { mutate: handleAddToLibrary, isPending: isAdding } = useMutation({
     mutationFn: () => addToLibrary(albumId),
+    onSuccess: () => {
+      addToast("Альбом додано до бібліотеки!", "success");
+    },
     onError: () => {
       addToast("Не вдалося додати альбом у бібліотеку.", "error");
     },
@@ -107,13 +112,22 @@ export default function AlbumDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-3 mt-8">
-            <button
-              className="btn bg-forest text-base-100 hover:bg-forest/90 border-none text-lg px-6"
-              onClick={() => handleAddToLibrary()}
-              disabled={isAdding}
-            >
-              {isAdding ? "Додаємо..." : "Додати в бібліотеку"}
-            </button>
+            {isUser ? (
+              <button
+                className="btn bg-forest text-base-100 hover:bg-forest/90 border-none text-lg px-6"
+                onClick={() => handleAddToLibrary()}
+                disabled={isAdding}
+              >
+                {isAdding ? "Додаємо..." : "Додати в бібліотеку"}
+              </button>
+            ) : !isAuthenticated ? (
+              <Link
+                to="/login"
+                className="btn bg-forest text-base-100 hover:bg-forest/90 border-none text-lg px-6"
+              >
+                Увійдіть, щоб додати
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,13 +1,18 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-
-const navLinks = [
-  { to: "/", label: "Каталог" },
-  { to: "/statistics", label: "Статистика" },
-  { to: "/library", label: "Бібліотека" },
-];
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Layout() {
   const location = useLocation();
+  const { isAuthenticated, isAdmin, isUser, user, logout } = useAuth();
+
+  const navLinks = [
+    { to: "/", label: "Каталог", show: true },
+    { to: "/statistics", label: "Статистика", show: true },
+    { to: "/library", label: "Бібліотека", show: isUser },
+    { to: "/admin", label: "Адмін-панель", show: isAdmin },
+  ];
+
+  const visibleLinks = navLinks.filter((l) => l.show);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,7 +26,7 @@ export default function Layout() {
             </Link>
 
             <nav className="hidden sm:flex items-center gap-1">
-              {navLinks.map((link) => {
+              {visibleLinks.map((link) => {
                 const isActive =
                   link.to === "/"
                     ? location.pathname === "/"
@@ -43,17 +48,31 @@ export default function Layout() {
             </nav>
 
             <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="btn btn-sm bg-forest text-base-100 hover:bg-forest/80 border-none text-base font-semibold"
-              >
-                Увійти
-              </Link>
+              {isAuthenticated && user ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted hidden sm:inline">
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="btn btn-sm bg-base-300 text-muted hover:text-cream hover:bg-base-400 border-none text-base font-semibold"
+                  >
+                    Вийти
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="btn btn-sm bg-forest text-base-100 hover:bg-forest/80 border-none text-base font-semibold"
+                >
+                  Увійти
+                </Link>
+              )}
             </div>
           </div>
 
           <nav className="sm:hidden flex items-center gap-1 pb-3 overflow-x-auto">
-            {navLinks.map((link) => {
+            {visibleLinks.map((link) => {
               const isActive =
                 link.to === "/"
                   ? location.pathname === "/"

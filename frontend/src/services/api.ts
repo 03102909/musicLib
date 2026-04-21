@@ -1,12 +1,45 @@
 import axios from 'axios';
-import { Album, LibraryItem, Artist, Genre, ChartDataYear, ChartDataGenre } from '../types';
+import { Album, LibraryItem, Artist, Genre, ChartDataYear, ChartDataGenre, LoginResponse } from '../types';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3003/api', 
+  baseURL: 'http://localhost:3003/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const loginUser = async (email: string, password: string): Promise<LoginResponse> => {
+  const { data } = await api.post('/auth/login', { email, password });
+  return data;
+};
+
+export const registerUser = async (email: string, password: string, role?: string): Promise<LoginResponse> => {
+  const { data } = await api.post('/auth/register', { email, password, role });
+  return data;
+};
 
 export const getAlbums = async (): Promise<Album[]> => {
   const { data } = await api.get('/albums');
@@ -28,13 +61,13 @@ export const getGenres = async (): Promise<Genre[]> => {
   return data;
 };
 
-export const getUserLibrary = async (userId: number = 1): Promise<LibraryItem[]> => {
-  const { data } = await api.get(`/users/${userId}/library`);
+export const getUserLibrary = async (): Promise<LibraryItem[]> => {
+  const { data } = await api.get('/library');
   return data;
 };
 
-export const addToLibrary = async (albumId: number, rating?: number | null, userId: number = 1): Promise<LibraryItem> => {
-  const { data } = await api.post(`/users/${userId}/library`, {
+export const addToLibrary = async (albumId: number, rating?: number | null): Promise<LibraryItem> => {
+  const { data } = await api.post('/library', {
     album_id: albumId,
     rating,
   });
@@ -50,7 +83,6 @@ export const removeLibraryItem = async (libraryItemId: number): Promise<void> =>
   await api.delete(`/library/${libraryItemId}`);
 };
 
-// diagrams
 export const getAlbumsCountByYear = async (): Promise<ChartDataYear[]> => {
   const { data } = await api.get('/charts/countByYear');
   return data;
@@ -61,7 +93,6 @@ export const getAlbumsCountByGenre = async (): Promise<ChartDataGenre[]> => {
   return data;
 };
 
-// admin
 export const createAlbum = async (albumData: any): Promise<Album> => {
   const { data } = await api.post('/albums', albumData);
   return data;
@@ -76,7 +107,6 @@ export const deleteAlbum = async (id: number): Promise<void> => {
   await api.delete(`/albums/${id}`);
 };
 
-// data port (import/export)
 export const importFromExcel = async (file: File): Promise<{ message: string; imported: number; skipped: number }> => {
   const formData = new FormData();
   formData.append('file', file);

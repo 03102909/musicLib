@@ -20,7 +20,7 @@ const formatLibraryItem = (item) => ({
 
 const getUserLibrary = async (req, res, next) => {
   try {
-    const userId = Number(req.params.userId) || 1;
+    const userId = req.user.id;
     const library = await prisma.library_item.findMany({
       where: { user_id: userId },
       include: {
@@ -40,7 +40,7 @@ const getUserLibrary = async (req, res, next) => {
 
 const addToLibrary = async (req, res, next) => {
   try {
-    const userId = Number(req.params.userId) || 1;
+    const userId = req.user.id;
     const { album_id, rating } = req.body;
     const item = await prisma.library_item.create({
       data: {

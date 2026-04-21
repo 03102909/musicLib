@@ -36,6 +36,17 @@ export type User = {
   created_at: string | null;
 };
 
+export type AuthUser = {
+  id: number;
+  email: string;
+  role: string;
+};
+
+export type LoginResponse = {
+  token: string;
+  user: AuthUser;
+};
+
 export type ChartDataYear = {
   year: string;
   count: number;

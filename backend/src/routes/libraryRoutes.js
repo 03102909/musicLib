@@ -1,5 +1,8 @@
-const libraryRouter = require("express").Router({ mergeParams: true });
+const libraryRouter = require("express").Router();
 const controller = require("../controllers/libraryController");
+const { authenticateToken, requireRole } = require("../utils/middleware");
+
+libraryRouter.use(authenticateToken, requireRole("user"));
 
 libraryRouter.get("/", controller.getUserLibrary);
 libraryRouter.post("/", controller.addToLibrary);
