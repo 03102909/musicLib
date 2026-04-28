@@ -19,12 +19,14 @@ const importFromExcel = async (req, res, next) => {
       const genreName = worksheet.name.trim();
       if (!genreName) continue;
 
-      let genre = await prisma.genres.findUnique({ where: { name: genreName } });
+      let genre = await prisma.genres.findUnique({
+        where: { name: genreName },
+      });
       if (!genre) {
         genre = await prisma.genres.create({ data: { name: genreName } });
       }
 
-      worksheet.eachRow({ includeEmpty: false }, () => {}); // force parse
+      worksheet.eachRow({ includeEmpty: false }, () => {});
       const rowCount = worksheet.rowCount;
 
       for (let rowIdx = 2; rowIdx <= rowCount; rowIdx++) {
@@ -32,7 +34,8 @@ const importFromExcel = async (req, res, next) => {
         const title = (row.getCell(1).value || "").toString().trim();
         const artistName = (row.getCell(2).value || "").toString().trim();
         const releaseYear = parseInt(row.getCell(3).value, 10) || 0;
-        const description = (row.getCell(4).value || "").toString().trim() || null;
+        const description =
+          (row.getCell(4).value || "").toString().trim() || null;
         const coverUrl = (row.getCell(5).value || "").toString().trim() || null;
 
         if (!title || !artistName || !releaseYear) {
@@ -40,7 +43,9 @@ const importFromExcel = async (req, res, next) => {
           continue;
         }
 
-        let artist = await prisma.artists.findFirst({ where: { name: artistName } });
+        let artist = await prisma.artists.findFirst({
+          where: { name: artistName },
+        });
         if (!artist) {
           artist = await prisma.artists.create({ data: { name: artistName } });
         }
@@ -102,7 +107,7 @@ const exportToExcel = async (req, res, next) => {
     workbook.created = new Date();
 
     for (const genre of genres) {
-      const sheetName = genre.name.substring(0, 31); 
+      const sheetName = genre.name.substring(0, 31);
       const worksheet = workbook.addWorksheet(sheetName);
 
       const headerRow = worksheet.addRow(HEADERS);
@@ -148,7 +153,7 @@ const exportToExcel = async (req, res, next) => {
 
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(Buffer.from(buffer));
